@@ -1,0 +1,2 @@
+.space {background-color:blue; margin:1px; width:80px; height:80px; position:relative;}
+.piece {width:80px; height:80px; background-color:green; position:absolute; top:0; left:0;}

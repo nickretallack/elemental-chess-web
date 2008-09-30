@@ -1,0 +1,4 @@
+urls = (
+    '/',      'index',
+    '/move',  'move',
+    )
