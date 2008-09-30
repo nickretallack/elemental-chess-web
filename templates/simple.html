@@ -1,30 +1,31 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
-  <link rel="stylesheet" type="text/css" href="static/style.css">
-<script type="text/javascript" src="static/mootools-1.2-core-nc.js"></script>
-<script type="text/javascript" src="static/mootools-1.2-more.js"></script>
-<script type="text/javascript" src="static/boardgame.js"></script>
-</head>
-<body>
-<table>
-#for $row in $board
-<tr>
-
-#for $space in $row
-<td class="space">
-
-#if $space
-<div class="piece">
-$space
-</div>
-#end if
-
-</td>
-#end for
-
-</tr>
-#end for
-</table>
-</body>
-</html>
+  <title>Elemental Chess</title>
+  <link rel="stylesheet" type="text/css" href="static/style.css" />
+  <!--<script type="text/javascript" src="static/mootools-1.2-core-nc.js"></script>
+    <script type="text/javascript" src="static/mootools-1.2-more.js"></script>
+    <script type="text/javascript" src="static/boardgame.js"></script>-->
+  </head>
+  <body>
+    <form action="move" method="post">
+      <table>
+        #for $row in $board
+        <tr>
+          #for $space in $row
+          <td class="space">
+            #if 'piece' in $space and 'target' in $space
+            <input type="submit" value="$space.piece" name="conflict">
+            #elif 'target' in $space
+            <input type="submit" value="$space.target" name="target">
+            #elif 'piece' in $space
+            <input type="submit" value="$space.piece" name="piece"/>
+            #end if
+          </td>
+          #end for
+        </tr>
+        #end for
+      </table>
+    </form>
+  </body>
+  </html>
