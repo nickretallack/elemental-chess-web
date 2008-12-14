@@ -1,0 +1,52 @@
+# extends 'base.html'
+# block head
+<script type="text/javascript">
+var timestamp = "{{timestamp}}"
+/*
+$(document).ready(function(){
+  console.debug("Going")
+  $('#chat').submit(function(event){
+    event.preventDefault()
+    data = $(event.target).serialize()
+    $.post('/chat',data)
+  })
+  
+  event_period = 1000
+  function checkEvents(){
+    data = {timestamp:timestamp,stuff:{things:"hey"}}
+    $.getJSON('/chat', data, function(response){
+      timestamp = response.timestamp
+      $.each(response.chats,function(){
+        $('#messages').prepend("<p>New Message: "+this.text+"</p>" )        
+      })
+      console.debug(response)      
+      setTimeout(checkEvents, event_period)
+    })
+  }
+  setTimeout(checkEvents, event_period)  
+})*/
+
+</script>
+# endblock
+# block body
+
+<form action="/game" method="post">
+  <input type="submit" value="New Game">
+</form>
+
+# for game in games
+<a href="/games/{{game.id}}">{{game.id}}</a>
+# endfor
+
+
+<form action="/chat" method="post" id="chat">
+<input type="text" name="text" />
+<input type="submit" value="Chat" />
+</form>
+
+<div id="messages">
+# for chat in chats
+<p>Message: {{chat.value.text}}</p>
+# endfor
+</div>
+# endblock

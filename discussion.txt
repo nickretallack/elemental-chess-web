@@ -1,0 +1,77 @@
+Board representation:
+It might be easier to represent the board as a hash of string-named spaces.  This works for more kinds of games anyway.  It's up to the game logic to decide if something on "space_foo" can move to "space_bar", either by deconstructing it into components or maintaining a border list or whatever.
+
+
+
+
+---
+
+Strategy for tolerating multiple events in the same microsecond:
+1) fetch all events starting at the requested microsecond
+2) construct a new array that skims out all events equal to the requested microsecond
+3) if the new array has length zero or one less than the old array, all is well.  Return normally.
+4) if the new array has length 2 or more less than the old array, return the old array instead
+5) on the javascript side, only apply events at our same microsecond that we didn't personally send
+
+wait no, this is much simpler: just don't send events back to the client who broadcasted them if they have the same microsecond as requested.  Hm, but how do we know which client broadcast them...
+Perhaps we should use their user id...  Yeah, that makes sense.  Then we can tell who was controlling a player when they caused an event :D.
+
+
+db formats:  (type=first word)
+  move(user(id), from(space_tag), to(space_tag))
+  chat(user(id), text(string), game(id))
+  game(board(structure), players(color:id), turn(color))
+
+
+
+---
+
+Names: generate random silly names and stick them in the session for now.  I guess you could change your name pretty easy by posting it to a url, but then we'd have to check that other people aren't using it...
+
+Should we represent players in the database?  Do we need to know who's in a game?
+Lets see.  Hm.  Well we need to know who's allowed to post a new move, so yes.
+Maybe I should save the avante-guarde simplicity for later.
+
+Okay.  Database stuff.
+Game: players, pieces(player_id, kind_tag, space_tag)
+hm, maybe you have to be logged in to play, but not to watch.
+
+Page setup:
+  index: new game form, list of public games
+    (private/public.  Invite users?)  Hmm, what about chatting directly at people.
+    I guess we could have chat events that are to someone...(private)
+  game/id: in a game.  Hmm.  How can we make a humane id for this.  is.gd style?
+    but what if people start a game at the same time...   ah fuckit, we can use guids for now
+
+
+okay, setting up a game.  lets use some old code to generate the board...  
+nah fuckit, storing game data as pieces instead of the board just may be too much work.
+We have to render the board when you refresh anyway.
+
+
+
+---------- okay!
+
+The event system would be much more efficient if we did not duplicate records, but instead used timestamps.
+When a player receives a page from the server, it includes a timestamp in a javascript variable.
+When they ask for events, they pass that timestamp in.  The server finds events that have happened since that timestamp but not equal to it.  It then passes them back with the timestamp of the latest one.  Nothing is mutated on the server side for this reading action.
+
+Including a timestamp in the page: we better make sure there's no caching going on!  Perhaps keep a record of the last timestamp you've sent and see if you ever regress.  (oh god what about multiple windows...  Well, they're safer with the timestamp approach at least.  Now we know that if we regress on timestamps, it's likely either a caching problem OR multiple game windows.)
+
+
+Okay, events.  Lets try out chat events first.  Post text to the chat url.
+
+what happens if two events happen at the same microsecond?  I guess you'd miss one.  Hm.  I suppose we could return events that even have a timestamp equal to our last, and then check against things we already know about?
+
+-old-
+We shall have a glorious event system!
+When a user moves a piece, the board in the system is updated
+And, an event is created for each player detailing the move
+
+When a player checks for new events, all new events are sent to them
+And, (if the handshake succeeds?) they are deleted
+
+When a player loads the board view, all their incoming move events are deleted
+
+Should we use timestamps in this event system?
+They have potential to screw things up, so, perhaps only for show.

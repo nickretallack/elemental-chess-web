@@ -1,0 +1,39 @@
+# extends 'base.html'
+
+# block head
+<script type="text/javascript">
+var game_id = "{{game.id}}"
+
+$(document).ready(function(){
+  $(".piece").draggable({helper:"clone"})
+  $(".space").droppable({accept:".piece", drop:function(event,ui){
+    piece = ui.draggable
+    from = piece.parents(".space:first").attr("data_location")
+    to = $(this).attr("data_location")
+    data = {from_space:from, to_space:to}
+    $.post("/games/"+game_id+"/move", data, function(response){
+      console.debug(response)
+    })
+  }})
+})
+
+
+</script>
+# endblock
+
+
+# block body
+<table>
+# for x in range(game.board|len)
+<tr>
+# for y in range(game.board[x]|len)
+<td class="space" data_location="{{x}}-{{y}}">
+# if game.board[x][y]
+<div class="piece {{game.board[x][y].player}}-player"><img src="/static/pieces/{{game.board[x][y].kind}}.png"></div>
+# endif
+</td>
+# endfor
+</tr>
+# endfor
+</table>
+# endblock

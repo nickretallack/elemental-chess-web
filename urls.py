@@ -1,4 +1,0 @@
-urls = (
-    '/',      'index',
-    '/move',  'move',
-    )

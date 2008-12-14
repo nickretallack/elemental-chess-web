@@ -1,2 +1,12 @@
-.space {background-color:blue; margin:1px; width:80px; height:80px;}
-input {width:80px; height:80px; background-color:green;}
+table {border-collapse:collapse; }
+td {vertical-align:top;}
+
+.space {background-color:lightgrey; border:1px solid white; padding:0;}
+.space, .piece {width:80px; height:80px;}
+.piece img {max-width:80px; max-height:80px; display:block;}
+
+
+.red-player {background-color:red;}
+.blue-player {background-color:blue;}
+
+/*input {width:80px; height:80px; background-color:green;}*/

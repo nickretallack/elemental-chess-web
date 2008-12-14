@@ -1,8 +1,15 @@
-from couch_util import couch_request
-
-from web.cheetah import render
 import web
+from database import db
+#from couch_util import couch_request
 
+import jinja2
+env = jinja2.Environment(loader=jinja2.FileSystemLoader('templates'), line_statement_prefix="#")
+env.filters['len'] = len
+
+def render(template,**args):
+  return env.get_template(template+'.html').render(**args)
+
+"""
 class Piece(object):
   def __init__(self,options):
     self.rank = options['rank']
@@ -68,16 +75,179 @@ def mark_valid_moves(piece,board):
       # unsafe wording....
       if not 'piece' in target or battle(piece,target['piece']): # see if move is legal
         board[ny][nx]['target'] = piece
-      
+"""   
+  
+def get_you():
+  openid = web.openid.status()
+  if openid:
+    key = "user-%s" % openid
+    if key in db:
+      return db[key]
+    else:
+      you = {'type':'user', 'openids':[openid]}
+      db[key] = you
+      return you
+
+  
+  
+def make_timestamp():
+  from datetime import datetime
+  return datetime.now().isoformat()  
+  
+find_chats = """
+function(doc){
+  if(doc.type == "chat"){
+    emit(doc.timestamp, {"text":doc.text})
+  }
+}"""
+
+find_games = """
+function(doc){
+  if(doc.type == "game"){
+    emit(doc._id,1)
+  }
+}
+"""
+  
   
 
-class index:
+class Index:
   def GET(self):
-    game = Game()
-    render('simple.html',{'board':game.spaces})
+    games = db.query(find_games).rows
+    chats = db.query(find_chats).rows
+    return render("index", chats=chats, games=games, timestamp=chats[-1].key, you=get_you())
 
-class move:
+class Chat:
   def POST(self):
+    # this is an event
+    params = web.input(text='')
+    event = {"type":"chat", "timestamp":make_timestamp(), "text":params["text"]}
+    db.create(event)
+    return ''
+  
+  def GET(self):
+    import json
+    params = web.input(timestamp=make_timestamp())
+    chats = db.query(find_chats, startkey=params["timestamp"]).rows
+    if(len(chats)):
+      timestamp = chats[-1].key
+    else:
+      timestamp = params["timestamp"]
+      
+    new_chats = [chat.value for chat in chats if chat.key != params["timestamp"]]  
+    return json.dumps({"timestamp":timestamp, "chats":new_chats})
+    #return json.dumps(chats)
+    #game = Game()
+    #render('simple.html',{'board':game.spaces})
+
+
+class Event:
+  def GET(self):
+    events = db.query(find_chats)
+
+
+def tag_2d(tag):
+  return [int(x) for x in tag.split('-')]
+  
+
+class Move:
+  def POST(self, game_id):
+    you = get_you()
+    if not you: # TODO
+      raise web.notfound() # how about access denied instead?
+    
+    if game_id not in db:
+      raise web.notfound
+
+    params = web.input(from_space=None, to_space=None)
+    if not (params["from_space"] and params["to_space"]):
+      web.ctx.status = 400
+      return "Moves must include from_space and to_space"
+
+    from_space = tag_2d(params["from_space"])
+    to_space   = tag_2d(params["to_space"])
+    
+    if not (len(from_space) == len(to_space) == 2):
+      web.ctx.status = 400
+      return "Invalid space tags"
+            
+    game   = db[game_id]
+    board = game["board"]
+    attacking_piece = game["board"][from_space[0]][from_space[1]]
+
+    if attacking_piece == None:
+      return "No piece to move from %s" % params["from_space"]
+
+    if attacking_piece["player"] != "red": # TODO
+      return "You don't have a piece on %s" % params["from_space"]
+
+    if not valid_move(attacking_piece["kind"], from_space, to_space):
+      #web.ctx.status = 401
+      return "You can't move %s from %s to %s" % (attacking_piece["kind"], params["from_space"], params["to_space"])
+    
+    defending_piece = game["board"][to_space[0]][to_space[1]]
+    if defending_piece != None:
+    
+      if attacking_piece["player"] == defending_piece["player"]:
+        #web.ctx.status = 401
+        return "You can't attack yourself"
+    
+    
+      if not battle(attacking_piece["kind"], defending_piece["kind"]):
+        #web.ctx.status = 401
+        return "You can't beat %s with %s" % (defending_piece["kind"], attacking_piece["kind"])
+      
+    # actually move the piece
+    game["board"][from_space[0]][from_space[1]] = None
+    game["board"][to_space[0]][to_space[1]] = attacking_piece
+    
+    # TODO: advance the turn?
+    
+    db[game_id] = game
+    
+    # trigger an event
+    move = {"type":"move", "user":you.id, "timestamp":make_timestamp(),
+            "from_space":params["from_space"], "to_space":params["to_space"]}
+    
+    db.create(move)
+      
+    return "OK"
+
+
+type_advantages = {"fire":"plant", "plant":"water", "water":"fire"}
+
+
+
+def battle(attacker, defender):
+  if attacker == "wizard": return False
+  if defender == "wizard": return True
+  attacker_type = attacker[:-1]
+  defender_type = defender[:-1]
+  if type_advantages[attacker_type] == defender_type: return True
+  if type_advantages[defender_type] == attacker_type: return False
+  attacker_level = int(attacker[-1])
+  defender_level = int(defender[-1])
+  if attacker_level > defender_level: return True
+  return False
+
+
+def valid_move(kind, from_space, to_space):
+  if abs(from_space[0] - to_space[0]) + abs(from_space[1] - to_space[1]) == 1:
+    return True   # only moved one space
+
+  # if to_space[0] == from_space[0]:
+  #   if abs(to_space[1] - from_space[1]) == 1:
+  #     return True
+  # elif to_space[1] == from_space[1]
+  #   if abs(to_space[0] - from_space[0]) == 1:
+  #     return True
+  
+  elif (kind == "wizard") and (abs(from_space[0] - to_space[0]) == 1) and (abs(from_space[1] - to_space[1]) == 1):
+    return True   # moved one space on each axis
+
+
+
+"""
     params = web.input(piece=None,target=None)
     if params.piece:
       # user selected a piece
@@ -88,3 +258,40 @@ class move:
     elif params.target:
       pass
       # user tried to move the piece
+"""      
+
+class Game:
+  def GET(self, game_id):
+    if game_id not in db:
+      raise web.notfound()
+      
+    game = db[game_id]
+    if game['type'] != "game":
+      raise web.notfound()
+
+    return render('game',game=game)
+  
+
+
+
+class Games:
+  def POST(self):
+    you  = get_you() or "TEST"
+    if not you: return "You must be logged in to create a game"
+    from setup_board import board
+    game = {"type":"game", "players":{"red":you}, "board":board, "turn":"red"}
+    game_id = db.create(game)
+    web.seeother("/game/%s" % game_id)
+
+
+
+urls = (
+    '/',      Index,
+    '/login', web.openid.host,
+    '/games/(.*)/move',  Move,
+    '/chat',  Chat,
+    '/games',  Games,
+    '/games/(.*)', Game,
+    )
+
+application = web.application(urls, locals())
