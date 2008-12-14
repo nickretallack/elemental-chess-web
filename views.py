@@ -2,6 +2,9 @@ import web
 from database import db
 #from couch_util import couch_request
 
+COUCH_MAX = u"\u9999"
+
+
 import jinja2
 env = jinja2.Environment(loader=jinja2.FileSystemLoader('templates'), line_statement_prefix="#")
 env.filters['len'] = len
@@ -101,6 +104,19 @@ function(doc){
   }
 }"""
 
+find_events = """
+function(doc){
+  if(doc.type == "chat"){
+    emit([doc.game, doc.timestamp], {"type":"chat", "user":doc.user, "name":doc.name, "timestamp":doc.timestamp, 
+                                    "text":doc.text})  
+  } else if(doc.type == "move"){
+    emit([doc.game, doc.timestamp], {"type":"move", "user":doc.user, "name":doc.name, "timestamp":doc.timestamp, 
+                                    "from_space":doc.from_space, "to_space":doc.to_space })
+  }
+}"""
+
+
+
 find_games = """
 function(doc){
   if(doc.type == "game"){
@@ -117,33 +133,46 @@ class Index:
     chats = db.query(find_chats).rows
     return render("index", chats=chats, games=games, timestamp=chats[-1].key, you=get_you())
 
-class Chat:
-  def POST(self):
-    # this is an event
-    params = web.input(text='')
-    event = {"type":"chat", "timestamp":make_timestamp(), "text":params["text"]}
-    db.create(event)
-    return ''
-  
-  def GET(self):
+# class Chat:
+#   def POST(self):
+#     # this is an event
+#     params = web.input(text='')
+#     event = {"type":"chat", "timestamp":make_timestamp(), "text":params["text"]}
+#     db.create(event)
+#     return ''
+#   
+#   def GET(self):
+#     import json  # making a current timestamp is totally meaningless...  lets put it in the url
+#     params = web.input(timestamp=make_timestamp()) 
+#     chats = db.query(find_chats, startkey=[None,params["timestamp"]]).rows
+#     if(len(chats)):
+#       timestamp = chats[-1].key
+#     else:
+#       timestamp = params["timestamp"]
+#       
+#     new_chats = [chat.value for chat in chats if chat.key != params["timestamp"]]  
+#     return json.dumps({"timestamp":timestamp, "chats":new_chats})
+#     #return json.dumps(chats)
+#     #game = Game()
+#     #render('simple.html',{'board':game.spaces})
+
+
+class GameEvents:
+  def GET(self, game_id, timestamp):
+    you = get_you()
+    if you: you_id = you.id
+    else:   you_id = None
+    
     import json
-    params = web.input(timestamp=make_timestamp())
-    chats = db.query(find_chats, startkey=params["timestamp"]).rows
-    if(len(chats)):
-      timestamp = chats[-1].key
-    else:
-      timestamp = params["timestamp"]
-      
-    new_chats = [chat.value for chat in chats if chat.key != params["timestamp"]]  
-    return json.dumps({"timestamp":timestamp, "chats":new_chats})
-    #return json.dumps(chats)
-    #game = Game()
-    #render('simple.html',{'board':game.spaces})
-
-
-class Event:
-  def GET(self):
-    events = db.query(find_chats)
+    events = db.query(find_events, startkey=[game_id, timestamp], endkey=[game_id, COUCH_MAX]).rows
+    if(not len(events)): # no events have happened in this game yet, most likely
+      return json.dumps({"timestamp":timestamp})
+    
+    newest_timestamp = events[-1].key[1] # highly dependent on query
+    new_events = [event.value for event in events if event.key[1] != timestamp]
+    message = json.dumps({"timestamp":newest_timestamp, "events":new_events})
+    return message
+    
 
 
 def tag_2d(tag):
@@ -197,21 +226,24 @@ class Move:
         #web.ctx.status = 401
         return "You can't beat %s with %s" % (defending_piece["kind"], attacking_piece["kind"])
       
+    
+      
     # actually move the piece
     game["board"][from_space[0]][from_space[1]] = None
     game["board"][to_space[0]][to_space[1]] = attacking_piece
     
     # TODO: advance the turn?
-    
-    db[game_id] = game
-    
+
     # trigger an event
-    move = {"type":"move", "user":you.id, "timestamp":make_timestamp(),
+    move = {"type":"move", "game":game_id, "user":you.id,
             "from_space":params["from_space"], "to_space":params["to_space"]}
     
-    db.create(move)
+    # update timestamps just before saving
+    game["timestamp"] = move["timestamp"] = make_timestamp()    
+    db[game_id] = game
+    move_id = db.create(move)
       
-    return "OK"
+    return move_id
 
 
 type_advantages = {"fire":"plant", "plant":"water", "water":"fire"}
@@ -269,7 +301,10 @@ class Game:
     if game['type'] != "game":
       raise web.notfound()
 
-    return render('game',game=game)
+
+    #newest_event = db.query(find_events, startkey=[game_id,None], endkey=[game_id,COUCH_MAX], count=1, descending=True).rows[0]
+    #timestamp = newest_event
+    return render('game',game=game, you=get_you())
   
 
 
@@ -279,19 +314,20 @@ class Games:
     you  = get_you() or "TEST"
     if not you: return "You must be logged in to create a game"
     from setup_board import board
-    game = {"type":"game", "players":{"red":you}, "board":board, "turn":"red"}
+    game = {"type":"game", "players":{"red":you}, "board":board, "turn":"red", "timestamp":make_timestamp()}
     game_id = db.create(game)
-    web.seeother("/game/%s" % game_id)
+    web.seeother("/games/%s" % game_id)
 
 
 
 urls = (
     '/',      Index,
     '/login', web.openid.host,
-    '/games/(.*)/move',  Move,
     '/chat',  Chat,
-    '/games',  Games,
+    '/games/(.*)/events/(.*)', GameEvents,
+    '/games/(.*)/moves',  Move,
     '/games/(.*)', Game,
+    '/games',  Games,
     )
 
 application = web.application(urls, locals())

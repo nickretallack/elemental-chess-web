@@ -16,6 +16,10 @@ Strategy for tolerating multiple events in the same microsecond:
 wait no, this is much simpler: just don't send events back to the client who broadcasted them if they have the same microsecond as requested.  Hm, but how do we know which client broadcast them...
 Perhaps we should use their user id...  Yeah, that makes sense.  Then we can tell who was controlling a player when they caused an event :D.
 
+Nah this is all crap.  I think we should just have the client check if they're receiving an event they already know about...?  urgh no.
+
+
+
 
 db formats:  (type=first word)
   move(user(id), from(space_tag), to(space_tag))
