@@ -139,11 +139,11 @@ class GameMove:
             "from_space":params["from_space"], "to_space":params["to_space"]}
     
     # update timestamps just before saving
-    game["timestamp"] = move["timestamp"] = make_timestamp()    
+    game["timestamp"] = move["timestamp"] = timestamp = make_timestamp()    
     db[game_id] = game
     move_id = db.create(move)
       
-    return move_id
+    return timestamp
 
 
 
