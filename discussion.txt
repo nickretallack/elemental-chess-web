@@ -1,15 +1,20 @@
 Todo:
   random unique user names
-  users list so you can start a game with them  
-  hash-colored games
-  game logic on client side
-  detect mouse and keyboard activity, and throttle down polling if there is none for a while
-  responsive client-side handling of moving pieces and stuff
-  how do I avoid sending the same event back to you?
+  make it look nice
 
-  settings page to set your name - CHECK
+  game logic on client side -
+  how do I avoid sending the same event back to you? - maintain a list of sent events
+  responsive client-side handling of moving pieces and stuff -
+  detect mouse and keyboard activity, and throttle down polling if there is none for a while -
+  users list so you can start a game with them -
+  hash-colored games -
+  settings page to set your name -
 
 
+Wishlist:
+  unify user system with other projects?
+  stretchy board with jquery resize
+  filter droppables as well as draggables and set revert:true
 
 
 Board representation:

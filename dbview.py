@@ -28,7 +28,7 @@ function(doc){
 map_users = """
 function(doc){
   if(doc.type == "user"){
-    emit(doc.slug, {"name":doc.name})
+    emit(doc.slug, {"name":doc.name, "slug":doc.slug})
   }
 }"""
 

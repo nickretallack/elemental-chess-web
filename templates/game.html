@@ -14,6 +14,7 @@ var your_players = {{your_players|json}}
 # block body
 <h3 id="status"></h3>
 
+Red: {{players.red.name}}
 <table>
 # for x in range(game.board|len)
 <tr>
@@ -30,6 +31,7 @@ var your_players = {{your_players|json}}
 </tr>
 # endfor
 </table>
+Blue: {{players.blue.name}}
 
 # include "chat.html"
 # endblock

@@ -15,13 +15,18 @@ class Index:
   def GET(self):
     you = get_you()
     games = dbview.games(db).rows
-    
-    if you:
-      users = [row for row in dbview.users(db) if row["id"] != you.id]
-    else:
-      users = []
-    #chats = db.query(find_chats).rows
+    users = [row.value for row in dbview.users(db)]
     return render("index", games=games, users=users, you=get_you())
+
+
+class User:
+  def GET(self, slug):
+    possible_users = dbview.users(db, startkey=slug, endkey=slug).rows
+    if not len(possible_users):
+      return web.notfound()
+    user = possible_users[0].value
+    return render("user", user=user, you=get_you())
+    
 
 
 class Game:
@@ -29,13 +34,15 @@ class Game:
     game = get_game(game_id)
     chats = dbview.chats(db, endkey=[game_id, ''], startkey=[game_id, COUCH_MAX], descending=True)
     you = get_you()
+    
+    players = dict([(color, db[player_id]) for (color,player_id) in game["players"].iteritems()])
 
     if you:
       your_players = [key for (key,value) in game["players"].iteritems() if value == you.id]
     else:
       your_players = []
       
-    return render('game',game=game, you=get_you(), chats=chats, your_players=your_players)
+    return render('game',game=game, you=get_you(), chats=chats, your_players=your_players, players=players)
 
 
 class GameEvents:
@@ -186,6 +193,7 @@ urls = (
     '/',      Index,
     '/login', web.openid.host,
     '/settings', Settings,
+    '/users/(.*)', User,
     #'/chat',  Chat,
     '/games/(.*)/events/(.*)', GameEvents,
     '/games/(.*)/moves',  GameMove,
