@@ -4,56 +4,32 @@
 <script type="text/javascript">
 var game_id = "{{game.id}}"
 var timestamp = "{{game.timestamp}}"
-
-$(document).ready(function(){
-  $(".piece").draggable({helper:"clone"})
-  $(".space").droppable({accept:".piece", drop:function(event,ui){
-    piece = ui.draggable
-    from = piece.parents(".space:first").attr("data_location")
-    to = $(this).attr("data_location")
-    data = {from_space:from, to_space:to}
-    $.post("/games/"+game_id+"/moves", data, function(response){
-      console.debug(response)
-    })
-  }})
-    
-  event_period = 1000
-  function checkEvents(){
-    $.getJSON('/games/'+game_id+'/events/'+timestamp, function(response){
-      timestamp = response.timestamp
-      if(response.events){
-        $.each(response.events ,function(){
-          from_space = $("[data_location="+this.from_space+"]")
-          to_space = $("[data_location="+this.to_space+"]")
-          to_space.children(".piece").remove()
-          from_space.children(".piece").appendTo(to_space)
-          console.debug(from_space.children(".piece"), to_space.children(".piece"))
-        })
-      }
-      //console.debug(response)      
-      setTimeout(checkEvents, event_period)
-    })
-  }
-  setTimeout(checkEvents, event_period)  
-})
-
-
+var turn_order = {{game.order|json}}
+var turn = {{game.turn}}
+var your_players = {{your_players|json}}
 </script>
+<script type="text/javascript" src="/static/game.js"></script>
 # endblock
 
-
 # block body
+<h3 id="status"></h3>
+
 <table>
 # for x in range(game.board|len)
 <tr>
 # for y in range(game.board[x]|len)
 <td class="space" data_location="{{x}}-{{y}}">
 # if game.board[x][y]
-<div class="piece {{game.board[x][y].player}}-player"><img src="/static/pieces/{{game.board[x][y].kind}}.png"></div>
+# set piece = game.board[x][y]
+<div class="piece {{piece.player}}-player {{piece.kind}}-kind" data_player="{{piece.player}}" data_kind="{{piece.kind}}">
+  <img src="/static/pieces/{{game.board[x][y].kind}}.png">
+</div>
 # endif
 </td>
 # endfor
 </tr>
 # endfor
 </table>
+
+# include "chat.html"
 # endblock

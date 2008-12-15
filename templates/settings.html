@@ -1,0 +1,10 @@
+# extends "base.html"
+# block body
+<h3>{{errors}}</h3>
+
+<form action="/settings" method="post">
+  <label for="name">Name:</label>
+  <input type="text" name="name" value="{{you.name}}">
+  <input type="submit" value="Save">
+</form>
+# endblock

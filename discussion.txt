@@ -1,8 +1,21 @@
+Todo:
+  random unique user names
+  users list so you can start a game with them  
+  hash-colored games
+  game logic on client side
+  detect mouse and keyboard activity, and throttle down polling if there is none for a while
+  responsive client-side handling of moving pieces and stuff
+  how do I avoid sending the same event back to you?
+
+  settings page to set your name - CHECK
+
+
+
+
 Board representation:
 It might be easier to represent the board as a hash of string-named spaces.  This works for more kinds of games anyway.  It's up to the game logic to decide if something on "space_foo" can move to "space_bar", either by deconstructing it into components or maintaining a border list or whatever.
 
-
-
+Then again, I'd have to remember the board's dimensions somewhere if I wanted to conveniently lay out a table for it.
 
 ---
 
@@ -18,7 +31,7 @@ Perhaps we should use their user id...  Yeah, that makes sense.  Then we can tel
 
 Nah this is all crap.  I think we should just have the client check if they're receiving an event they already know about...?  urgh no.
 
-
+Ugh, I have to do something to avoid always sending your own events back to yourself...
 
 
 db formats:  (type=first word)

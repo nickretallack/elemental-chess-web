@@ -30,23 +30,22 @@ $(document).ready(function(){
 # endblock
 # block body
 
+# if you
 <form action="/games" method="post">
   <input type="submit" value="New Game">
+  
+# for user in users
+<input type="radio" name="challenger" value="{{user.id}}" id="challeng-{{user.id}}">
+<label for="challenge-{{user.id}}">{{user.value|user_name}}</label>
+# endfor
 </form>
+# endif
+
 
 # for game in games
-<a href="/games/{{game.id}}">{{game.id}}</a>
+<a style="background-color:#{{game.id|hex_color}}; color:#{{game.id|hex_color(-1)}}" href="/games/{{game.id}}">{{game.id}}</a>
 # endfor
 
 
-<form action="/chat" method="post" id="chat">
-<input type="text" name="text" />
-<input type="submit" value="Chat" />
-</form>
-
-<div id="messages">
-# for chat in chats
-<p>Message: {{chat.value.text}}</p>
-# endfor
-</div>
+# include "chat.html"
 # endblock

@@ -5,8 +5,12 @@ td {vertical-align:top;}
 .space, .piece {width:80px; height:80px;}
 .piece img {max-width:80px; max-height:80px; display:block;}
 
+#logout-form, #login-form {display:inline;}
 
 .red-player {background-color:red;}
 .blue-player {background-color:blue;}
 
+.highlight {background-color:yellow !important;}
+.highlight .piece {background-color:orange;}
+.dragging {opacity:0.5;}
 /*input {width:80px; height:80px; background-color:green;}*/

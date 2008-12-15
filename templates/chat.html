@@ -1,0 +1,10 @@
+<form action="/chat" method="post" id="chat">
+<input type="text" name="text" />
+<input type="submit" value="Chat" />
+</form>
+
+<div id="messages">
+# for chat in chats
+<p>{{chat.value.name}}: {{chat.value.text}}</p>
+# endfor
+</div>
