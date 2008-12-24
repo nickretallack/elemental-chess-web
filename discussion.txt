@@ -1,8 +1,10 @@
 Todo:
-  random unique user names
+  revert illegal moves?
   make it look nice
+  random unique user names
   randomize game colors with hsl
 
+  check that you can create games properly - check
   game logic on client side -
   how do I avoid sending the same event back to you? - maintain a list of sent events
   responsive client-side handling of moving pieces and stuff -

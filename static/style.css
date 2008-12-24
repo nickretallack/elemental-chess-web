@@ -14,3 +14,5 @@ td {vertical-align:top;}
 .highlight .piece {background-color:orange;}
 .dragging {opacity:0.5;}
 /*input {width:80px; height:80px; background-color:green;}*/
+
+h2 {background-color:#00808d; color:white; margin:1ex 0 !important; text-align:center; padding-top:.2ex;}
