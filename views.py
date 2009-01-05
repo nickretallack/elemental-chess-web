@@ -14,9 +14,11 @@ import http
 class Index:
   def GET(self):
     you = get_you()
-    games = dbview.games(db).rows
+    import game_model
+    gameset = game_model.Game.all()
+    #games = dbview.games(db).rows
     users = [row.value for row in dbview.users(db)]
-    return render("index", games=games, users=users, you=get_you())
+    return render("index", games=gameset, users=users, you=get_you())
 
 
 class User:

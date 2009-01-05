@@ -1,4 +1,6 @@
 Todo:
+  maybe we should represent games somehow, so the view can query for extra stuff like player names...
+
   revert illegal moves?
   make it look nice
   random unique user names
