@@ -45,7 +45,10 @@ class GameView:
 
 class GameEventsView:
   def GET(self, game_id, timestamp):
-    import json
+    try:
+      import json
+    except ImportError:
+      import simplejson as json
 
     events = dbview.events(db, startkey=[game_id, timestamp], endkey=[game_id, COUCH_MAX]).rows
 
