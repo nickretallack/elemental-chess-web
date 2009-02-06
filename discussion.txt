@@ -1,11 +1,20 @@
+To display player names on a game: well, the player's name isn't really part of the game object, so it requires an extra query.  I guess we could put those queries in the list comprehension though.
+
+Maybe we should break out the game logic into a game class.  I guess we could handle the object caching after we have defined that, as object caching is kind of premature optimization right now
+
+Okay, this implementation is a little batshit.  It would be much more minimal to just make an individual static method for it.
+
+
+
+
 Todo:
-  maybe we should represent games somehow, so the view can query for extra stuff like player names...
+  revert illegal moves
+  factor game logic into game class
 
-  revert illegal moves?
-  make it look nice
   random unique user names
-  randomize game colors with hsl
-
+  make it look nice
+  player names in a game.
+  randomize game colors with hsl -
   check that you can create games properly - check
   game logic on client side -
   how do I avoid sending the same event back to you? - maintain a list of sent events

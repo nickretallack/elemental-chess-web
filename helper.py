@@ -37,6 +37,8 @@ env.filters['json'] = json.dumps
 def render(template,**args):
   return env.get_template(template+'.html').render(**args)
 
+import dbview
+
 def get_you():
   openid = web.openid.status()
   if openid:
@@ -44,9 +46,26 @@ def get_you():
     if key in db:
       return db[key]
     else:
-      you = {'type':'user', 'openids':[openid], "name":"no-name"}
+      from random_name import random_name
+      from time import time
+      while True:
+        unique = True
+        name = random_name("%s-%d" % (openid,time()))
+        slug = slugify(name)
+        for row in dbview.users(db, startkey=slug, endkey=slug):
+          if slug == row.key:
+            unique = False
+            break
+    
+        if unique:
+          break
+      
+      you = {'type':'user', 'openids':[openid], "name":name, "slug":slug}
       db[key] = you
       return you
+
+#def unique_random_name(openid):
+
 
 def get_game(game_id):
   if game_id not in db:

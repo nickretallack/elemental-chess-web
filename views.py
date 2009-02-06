@@ -9,45 +9,41 @@ from helper import render, get_you, get_game, require_you, make_timestamp
 from dbview import *
 import http
 
+from game_model import User, Game
 
-
-class Index:
+class IndexView:
   def GET(self):
     you = get_you()
-    import game_model
-    gameset = game_model.Game.all()
-    #games = dbview.games(db).rows
-    users = [row.value for row in dbview.users(db)]
-    return render("index", games=gameset, users=users, you=get_you())
+    games = Game.all()
+    users = User.all()
+    return render("index", games=games, users=users, you=get_you())
 
-
-class User:
+class UserView:
   def GET(self, slug):
-    possible_users = dbview.users(db, startkey=slug, endkey=slug).rows
-    if not len(possible_users):
-      return web.notfound()
-    user = possible_users[0].value
+    user = User.get(slug=slug)
     return render("user", user=user, you=get_you())
     
 
-
-class Game:
+class GameView:
   def GET(self, game_id):
-    game = get_game(game_id)
+    game = Game.get(game_id)
     chats = dbview.chats(db, endkey=[game_id, ''], startkey=[game_id, COUCH_MAX], descending=True)
     you = get_you()
     
-    players = dict([(color, db[player_id]) for (color,player_id) in game["players"].iteritems()])
+    #players = dict([(color, db[player_id]) for (color,player_id) in game["players"].iteritems()])
 
+    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if you:
-      your_players = [key for (key,value) in game["players"].iteritems() if value == you.id]
+      your_players = [color for (color,player) in game.players.items() if player.id == you.id]
+      #print "Your Players: %s" % game.players.items()[0].id
     else:
+      print "NOTHING"
       your_players = []
       
-    return render('game',game=game, you=get_you(), chats=chats, your_players=your_players, players=players)
+    return render('game',game=game, you=get_you(), chats=chats, your_players=your_players)
 
 
-class GameEvents:
+class GameEventsView:
   def GET(self, game_id, timestamp):
     import json
 
@@ -64,7 +60,7 @@ class GameEvents:
     return json.dumps({"timestamp":newest_timestamp, "events":new_events})
 
 
-class Games:
+class GamesView:
   def POST(self):
     you = require_you()
     params = web.input()
@@ -85,7 +81,7 @@ class Games:
     web.seeother("/games/%s" % game_id)
 
 
-class GameChat:
+class GameChatView:
   #def GET(self, game_id):  # could just give us the chats, for debug purposes
   
   def POST(self, game_id):
@@ -106,7 +102,7 @@ class GameChat:
     return "OK"
 
 
-class GameMove:
+class GameMoveView:
   def POST(self, game_id):
     you = require_you()
     game = get_game(game_id)
@@ -167,7 +163,7 @@ class GameMove:
 
 
 
-class Settings:
+class SettingsView:
   def GET(self):
     return render("settings", you=require_you())
   
@@ -181,7 +177,7 @@ class Settings:
     if name and name != you.get('name',None):
       from helper import slugify
       slug = slugify(name)
-      for row in dbview.users(db):
+      for row in dbview.users(db, startkey=slug, endkey=slug):
         if slug == row.key:
           unique = False
           break
@@ -203,16 +199,16 @@ class Settings:
 
 
 urls = (
-    '/',      Index,
+    '/',      IndexView,
     '/login', web.openid.host,
-    '/settings', Settings,
-    '/users/(.*)', User,
+    '/settings', SettingsView,
+    '/users/(.*)', UserView,
     #'/chat',  Chat,
-    '/games/(.*)/events/(.*)', GameEvents,
-    '/games/(.*)/moves',  GameMove,
-    '/games/(.*)/chat',  GameChat,
-    '/games/(.*)', Game,
-    '/games',  Games,
+    '/games/(.*)/events/(.*)', GameEventsView,
+    '/games/(.*)/moves',  GameMoveView,
+    '/games/(.*)/chat',  GameChatView,
+    '/games/(.*)', GameView,
+    '/games',  GamesView,
     )
 
 application = web.application(urls, locals())

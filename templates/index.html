@@ -30,6 +30,11 @@ $(document).ready(function(){
 # endblock
 # block body
 
+<h2>Elemental Chess</h2>
+<p>This website allows you to play a minimal version of my original board game Elemental Chess over the internet 
+  (rules page coming soon).  You can log in with <a href="http://openid.net/">OpenID</a>, 
+  challenge users to a game, or watch the games in progress.  If you spot anything broken, email me at [the domain of this website]@gmail.com</p>
+
 <h2>Users</h2>
 # for user in users
 <a href="/users/{{user.slug}}">{{user.name}}</a>
@@ -37,7 +42,11 @@ $(document).ready(function(){
 
 <h2>Games</h2>
 # for game in games
-<a style="background-color:#{{game.id|hex_color}}; color:#{{game.id|hex_color(-1)}}" href="/games/{{game.id}}">{{game.id}}</a>
+<a style="background-color:#{{game.id|hex_color}}; display:inline-block; margin:.5ex; padding:1ex" href="/games/{{game.id}}">
+# for (color,player) in game.players.items()
+<span style="color:{{color}}; font-weight:bold; display:block">{{player.name}}</span>
+# endfor
+</a>
 # endfor
 
 
