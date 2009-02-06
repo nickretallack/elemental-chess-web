@@ -14,7 +14,8 @@
 <a href="/">Home</a> | 
 # if you
 logged in as {{you|user_name}}
-<a href="/settings" id="settings">settings</a><form method="post" action="/login" id="logout-form"><input type="hidden" name="action" value="logout" /><input type="submit" value="Log Out" id="logout"></form>
+| <a href="/settings" id="settings">settings</a>
+| <form method="post" action="/login" id="logout-form"><input type="hidden" name="action" value="logout" /><input type="submit" value="Log Out" id="logout"></form>
 # else
 <form method="post" action="/login" id="login-form"><input type="hidden" name="return_to" value="/"><input type="text" name="openid" id="openid_identifier"/><input type="submit" id="login" value="Log In"></form>
 <script type="text/javascript" id="__openidselector" src="https://www.idselector.com/selector/ddb6106634870c12617f13ab740aa8f24b723b56" charset="utf-8"></script>
