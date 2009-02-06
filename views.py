@@ -14,9 +14,11 @@ import http
 class Index:
   def GET(self):
     you = get_you()
-    games = dbview.games(db).rows
+    import game_model
+    gameset = game_model.Game.all()
+    #games = dbview.games(db).rows
     users = [row.value for row in dbview.users(db)]
-    return render("index", games=games, users=users, you=get_you())
+    return render("index", games=gameset, users=users, you=get_you())
 
 
 class User:
@@ -68,9 +70,20 @@ class GameEvents:
 class Games:
   def POST(self):
     you = require_you()
+    params = web.input()
+
+    if not params["user"]:
+      return web.notfound()
+    
+    user = dbview.users(db, startkey=params['user'], endkey=params['user']).rows
+    if not len(user):
+      return web.notfound()
+    else:
+      user = user[0]
+    
     from setup_board import board
     game = {"type":"game", "board":board, "timestamp":make_timestamp(), "turn":0, 
-            "players":{"red":you.id,"blue":you.id}, "order":["red","blue"]}
+            "players":{"red":you.id,"blue":user.id}, "order":["red","blue"]}
     game_id = db.create(game)
     web.seeother("/games/%s" % game_id)
 

@@ -12,11 +12,20 @@ def user_name(user):
 
 def hex_color(seed,invert=False):
   import random
-  random.seed(seed)
-  color = random.randint(0,16**6)
-  if invert:
-    color = 16**6 - color
-  return "%X" % color
+  import md5
+  from hsl import HSL_2_RGB
+  digest = md5.new(seed).digest()
+  print digest
+  random.seed(digest)
+  color = HSL_2_RGB(random.random(), 1, random.uniform(.2,.8))
+  print color
+  hex = "%02X%02X%02X" % color
+  print hex
+  return hex
+  # color = random.randint(0,16**6)
+  # if invert:
+  #   color = 16**6 - color
+  # return "%X" % color
 
 env.filters['len'] = len
 env.filters['user_name'] = user_name

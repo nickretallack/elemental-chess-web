@@ -72,6 +72,7 @@ $(document).ready(function(){
     $.ajax({type:"POST", url:"/games/"+game_id+"/moves", data:data, success:function(response){
       $('#status').text('')
       sent_events[response] = true
+      move_message("You move", piece.attr('data_kind'), from_space_tag, to_space_tag)
     }, error:function(response){
       $('#status').text(response.responseText)
     }})
@@ -103,24 +104,30 @@ $(document).ready(function(){
   var event_check_timer
   var last_interaction = new Date().getTime()
   
+  function move_message(user, piece, from, to){
+    $('#messages').prepend("<p>"+user+" "+piece+" from "+from+" to "+to+"</p>")
+  }
+  
   function checkEvents(){
     var miliseconds_idle = new Date().getTime() - last_interaction
     event_period = min_event_period + miliseconds_idle*miliseconds_idle / 1000000.0
-    console.debug(event_period)
     
     $.getJSON('/games/'+game_id+'/events/'+timestamp, function(response){
       if(response.timestamp) timestamp = response.timestamp
       if(response.events){
         $.each(response.events ,function(){
           if(sent_events[this.timestamp]){
-            delete sent_events[this.timestamp] // don't apply events you sent yourself
+            // don't apply events you sent yourself
+            delete sent_events[this.timestamp]
           } else if(this.type == "move"){
             var from_space = $("[data_location="+this.from_space+"]")
             var to_space = $("[data_location="+this.to_space+"]")
+            var piece = from_space.children(".piece")
             to_space.children(".piece").remove()
-            from_space.children(".piece").appendTo(to_space)
+            piece.prependTo(to_space)
             turn += 1
             update_dragging()
+            move_message(this.name+" moves", piece.attr('data_kind'), this.from_space, this.to_space)
           } else if(this.type == "chat"){
             $('#messages').prepend("<p>"+this.name+": "+this.text+"</p>" )        
           }
