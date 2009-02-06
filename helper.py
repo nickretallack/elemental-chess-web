@@ -21,7 +21,11 @@ def hex_color(seed,invert=False):
 env.filters['len'] = len
 env.filters['user_name'] = user_name
 env.filters['hex_color'] = hex_color
-import json
+
+try:
+  import json
+except ImportError:
+  import simplejson as json
 env.filters['json'] = json.dumps
 
 
