@@ -108,10 +108,12 @@ $(document).ready(function(){
     $('#messages').prepend("<p>"+user+" "+piece+" from "+from+" to "+to+"</p>")
   }
   
+  var checking_events_lock = false
   function checkEvents(){
+    checking_events_lock = true
     var miliseconds_idle = new Date().getTime() - last_interaction
     event_period = min_event_period + miliseconds_idle*miliseconds_idle / 1000000.0
-    
+    //console.debug(event_check_timer)
     $.getJSON('/games/'+game_id+'/events/'+timestamp, function(response){
       if(response.timestamp) timestamp = response.timestamp
       if(response.events){
@@ -134,10 +136,12 @@ $(document).ready(function(){
         })
       }
       event_check_timer = setTimeout(checkEvents, event_period)
+      checking_events_lock = false
     })
   }
 
   function nudge(){
+    if (checking_events_lock) return
     var miliseconds_idle = new Date().getTime() - last_interaction
     last_interaction = new Date().getTime()
     if(miliseconds_idle > 5000){
