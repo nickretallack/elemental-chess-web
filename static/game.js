@@ -27,10 +27,11 @@ $(document).ready(function(){
       var target_player = piece.attr('data_player')
       if(player == target_player) return false    // can't attack yourself
       var target_kind = piece.attr('data_kind')
+      if(target_kind == 'wizard') return true     // anything beats wizard
       var target_level = target_kind.slice(target_kind.length-1,target_kind.length)
       var target_type  = target_kind.slice(0, target_kind.length-1)
-      if(strengths[type] == target_type) return true
-      if(strengths[target_type] == type) return false
+      if(strengths[type] == target_type) return true              // elemental strengths
+      //if(strengths[target_type] == type) return false
       if(type == target_type && level > target_level) return true // same type fights by level
       return false
     })
@@ -103,21 +104,22 @@ $(document).ready(function(){
   var event_period = min_event_period
   var event_check_timer
   var last_interaction = new Date().getTime()
+  var checking_events = false
   
   function move_message(user, piece, from, to){
     $('#messages').prepend("<p>"+user+" "+piece+" from "+from+" to "+to+"</p>")
   }
   
-  var checking_events_lock = false
   function checkEvents(){
-    checking_events_lock = true
+    console.debug(sent_events)
+    checking_events = true
     var miliseconds_idle = new Date().getTime() - last_interaction
     event_period = min_event_period + miliseconds_idle*miliseconds_idle / 1000000.0
     //console.debug(event_check_timer)
     $.getJSON('/games/'+game_id+'/events/'+timestamp, function(response){
       if(response.timestamp) timestamp = response.timestamp
       if(response.events){
-        $.each(response.events ,function(){
+        $.each(response.events, function(){
           if(sent_events[this.timestamp]){
             // don't apply events you sent yourself
             delete sent_events[this.timestamp]
@@ -136,12 +138,12 @@ $(document).ready(function(){
         })
       }
       event_check_timer = setTimeout(checkEvents, event_period)
-      checking_events_lock = false
+      checking_events = false
     })
   }
 
   function nudge(){
-    if (checking_events_lock) return
+    if (checking_events) return
     var miliseconds_idle = new Date().getTime() - last_interaction
     last_interaction = new Date().getTime()
     if(miliseconds_idle > 5000){

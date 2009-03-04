@@ -5,9 +5,19 @@ Maybe we should break out the game logic into a game class.  I guess we could ha
 Okay, this implementation is a little batshit.  It would be much more minimal to just make an individual static method for it.
 
 
+Fault Tolerance may be important here -- sometimes the server fails.
+If it fails when you send a move, and doesn't give you a timestamp, then it'll eventually GET that move and do it in the name of a remote player.  Crap.
+-- ugh, it would have saved the move anyway
+
 
 
 Todo:
+  make wizard killable in js
+  highlight last moved piece so you know what they did
+  sounds when people move
+  put move logs into page template as well as chat, like js does -- colored and small too
+  win condition
+  fault tolerance -- see above
   revert illegal moves
   factor game logic into game class
 

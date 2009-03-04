@@ -9,6 +9,12 @@ from helper import render, get_you, get_game, require_you, make_timestamp
 from dbview import *
 import http
 
+try:
+  import json
+except ImportError:
+  import simplejson as json
+
+
 from game_model import User, Game
 
 class IndexView:
@@ -45,10 +51,6 @@ class GameView:
 
 class GameEventsView:
   def GET(self, game_id, timestamp):
-    try:
-      import json
-    except ImportError:
-      import simplejson as json
 
     events = dbview.events(db, startkey=[game_id, timestamp], endkey=[game_id, COUCH_MAX]).rows
 
@@ -173,7 +175,6 @@ class SettingsView:
   def POST(self):
     you = require_you()
     params = web.input(name='')
-
 
     unique = True
     name = params['name']
