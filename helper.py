@@ -90,7 +90,7 @@ def require_you():
   
 def make_timestamp():
   from datetime import datetime
-  return datetime.now().isoformat()  
+  return datetime.now().isoformat()
   
   
 # Modified slugging routines originally stolen from patches to django

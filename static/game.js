@@ -111,7 +111,7 @@ $(document).ready(function(){
   }
   
   function checkEvents(){
-    console.debug(sent_events)
+    // console.debug(sent_events)
     checking_events = true
     var miliseconds_idle = new Date().getTime() - last_interaction
     event_period = min_event_period + miliseconds_idle*miliseconds_idle / 1000000.0
